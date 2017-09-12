@@ -1,4 +1,6 @@
 import Foundation
+import RxCocoa
+import RxSwift
 
 public struct Style<T> {
     
@@ -9,7 +11,7 @@ public protocol Decorable: class {
     
     associatedtype DecorableType
     
-    var style: Style<DecorableType> { get set }
+    var style: Style<DecorableType> { get }
 }
 
 extension NSObject: Decorable {
@@ -91,25 +93,53 @@ public extension Decorable {
     }
 }
 
-struct StyleFrameworkRuntimeKeys {
-    
-    static var state = "\(#file)+\(#line)"
-    static var states = "\(#file)+\(#line)"
-}
-
 var stateDictionary = [Int: Any]()
 var statesDictionary = [Int: Any]()
+let statesDisposeBag = DisposeBag()
+let statesObserver = AnyObserver<Int>.init { (event: Event<Int>) in
+    guard let element = event.element else { return }
+    objc_sync_enter(stateDictionary)
+    stateDictionary[element] = nil
+    objc_sync_exit(stateDictionary)
+    objc_sync_enter(statesDictionary)
+    statesDictionary[element] = nil
+    objc_sync_exit(statesDictionary)
+    print(stateDictionary.keys.count, statesDictionary.keys.count)
+}
+
+extension NSObject {
+    
+    func prepare() {
+        if stateDictionary[address] == nil && statesDictionary[address] == nil {
+            rx.deallocating
+                .observeOn(ConcurrentDispatchQueueScheduler(qos: .background))
+                .map({ [address] _ -> Int in
+                    return address
+                })
+                .observeOn(MainScheduler.instance)
+                .bind(to: statesObserver)
+                .disposed(by: statesDisposeBag)
+        }
+    }
+}
 
 extension Decorable {
     
     var state: AnyHashable? {
         get {
             guard let object = self as? NSObject else { return nil }
+            objc_sync_enter(stateDictionary)
+            defer {
+                objc_sync_exit(stateDictionary)
+            }
             return stateDictionary[object.address] as? AnyHashable
         }
         set(value) {
             if let object = self as? NSObject {
+                object.prepare()
+                objc_sync_enter(stateDictionary)
                 stateDictionary[object.address] = value
+                objc_sync_exit(stateDictionary)
             }
             if let value = value, let decoration = states[value] {
                 style.apply(decoration)
@@ -120,12 +150,18 @@ extension Decorable {
     var states: [AnyHashable: Decoration<Self>] {
         get {
             guard let object = self as? NSObject else { return [:] }
-            guard let dictionary = statesDictionary[object.address] as? [AnyHashable: Decoration<Self>] else { return [:] }
-            return dictionary
+            objc_sync_enter(statesDictionary)
+            defer {
+                objc_sync_exit(statesDictionary)
+            }
+            return statesDictionary[object.address] as? [AnyHashable: Decoration<Self>] ?? [:]
         }
         set(value) {
             if let object = self as? NSObject {
+                object.prepare()
+                objc_sync_enter(statesDictionary)
                 statesDictionary[object.address] = value
+                objc_sync_exit(statesDictionary)
             }
         }
     }
