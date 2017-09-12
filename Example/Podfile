@@ -1,11 +1,6 @@
 use_frameworks!
 
 target 'Style_Example' do
-  pod 'Style', :path => '../'
-
-  target 'Style_Tests' do
-    inherit! :search_paths
-
-    
-  end
+    pod 'Style', :path => '../'
 end
+
