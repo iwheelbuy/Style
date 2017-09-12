@@ -87,24 +87,19 @@ public extension Decorable {
         get {
             return Style(object: self)
         }
-        set {
-            //
-        }
     }
 }
 
 var stateDictionary = [Int: Any]()
 var statesDictionary = [Int: Any]()
 let statesDisposeBag = DisposeBag()
+var statesMutex = pthread_mutex_t()
 let statesObserver = AnyObserver<Int>.init { (event: Event<Int>) in
     guard let element = event.element else { return }
-    objc_sync_enter(stateDictionary)
+    pthread_mutex_lock(&statesMutex)
     stateDictionary[element] = nil
-    objc_sync_exit(stateDictionary)
-    objc_sync_enter(statesDictionary)
     statesDictionary[element] = nil
-    objc_sync_exit(statesDictionary)
-    print(stateDictionary.keys.count, statesDictionary.keys.count)
+    pthread_mutex_unlock(&statesMutex)
 }
 
 extension NSObject {
@@ -117,6 +112,7 @@ extension NSObject {
                     return address
                 })
                 .observeOn(MainScheduler.instance)
+                .take(1)
                 .bind(to: statesObserver)
                 .disposed(by: statesDisposeBag)
         }
@@ -128,18 +124,18 @@ extension Decorable {
     var state: AnyHashable? {
         get {
             guard let object = self as? NSObject else { return nil }
-            objc_sync_enter(stateDictionary)
+            pthread_mutex_lock(&statesMutex)
             defer {
-                objc_sync_exit(stateDictionary)
+                pthread_mutex_unlock(&statesMutex)
             }
             return stateDictionary[object.address] as? AnyHashable
         }
         set(value) {
             if let object = self as? NSObject {
+                pthread_mutex_lock(&statesMutex)
                 object.prepare()
-                objc_sync_enter(stateDictionary)
                 stateDictionary[object.address] = value
-                objc_sync_exit(stateDictionary)
+                pthread_mutex_unlock(&statesMutex)
             }
             if let value = value, let decoration = states[value] {
                 style.apply(decoration)
@@ -150,18 +146,18 @@ extension Decorable {
     var states: [AnyHashable: Decoration<Self>] {
         get {
             guard let object = self as? NSObject else { return [:] }
-            objc_sync_enter(statesDictionary)
+            pthread_mutex_lock(&statesMutex)
             defer {
-                objc_sync_exit(statesDictionary)
+                pthread_mutex_unlock(&statesMutex)
             }
             return statesDictionary[object.address] as? [AnyHashable: Decoration<Self>] ?? [:]
         }
         set(value) {
             if let object = self as? NSObject {
+                pthread_mutex_lock(&statesMutex)
                 object.prepare()
-                objc_sync_enter(statesDictionary)
                 statesDictionary[object.address] = value
-                objc_sync_exit(statesDictionary)
+                pthread_mutex_unlock(&statesMutex)
             }
         }
     }
