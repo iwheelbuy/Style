@@ -1,6 +1,5 @@
 # Style
 
-[![CI Status](http://img.shields.io/travis/iwheelbuy/Style.svg?style=flat)](https://travis-ci.org/iwheelbuy/Style)
 [![Version](https://img.shields.io/cocoapods/v/Style.svg?style=flat)](http://cocoapods.org/pods/Style)
 [![License](https://img.shields.io/cocoapods/l/Style.svg?style=flat)](http://cocoapods.org/pods/Style)
 [![Platform](https://img.shields.io/cocoapods/p/Style.svg?style=flat)](http://cocoapods.org/pods/Style)
@@ -17,12 +16,12 @@ Style is available through [CocoaPods](http://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
 ```ruby
-pod 'Style'
+pod 'Style', '0.2.5'
 ```
 
 ## Author
 
-iwheelbuy, mikhail.vasilev@noveogroup.com
+iwheelbuy, iwheelbuy@gmail.com
 
 ## License
 
