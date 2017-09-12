@@ -11,7 +11,7 @@ public protocol Decorable: class {
     
     associatedtype DecorableType
     
-    var style: Style<DecorableType> { get }
+    var style: Style<DecorableType> { get set }
 }
 
 extension NSObject: Decorable {
@@ -86,6 +86,9 @@ public extension Decorable {
     var style: Style<Self> {
         get {
             return Style(object: self)
+        }
+        set {
+            //
         }
     }
 }
