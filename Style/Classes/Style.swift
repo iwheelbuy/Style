@@ -5,57 +5,57 @@ public struct Style<T> {
     let object: T
 }
 
-public protocol Alterable: class {
+public protocol Decorable: class {
     
-    associatedtype AlterType
+    associatedtype DecorableType
     
-    var style: Style<AlterType> { get set }
+    var style: Style<DecorableType> { get set }
 }
 
-extension NSObject: Alterable {
+extension NSObject: Decorable {
     
     var address: Int {
         return unsafeBitCast(self, to: Int.self)
     }
 }
 
-public typealias Change<T> = (T) -> Void
+public typealias Decoration<T> = (T) -> Void
 
-public extension Alterable {
+public extension Decorable {
     
-    static func change(closure: @escaping Change<Self>) -> Change<Self> {
+    static func decoration(closure: @escaping Decoration<Self>) -> Decoration<Self> {
         return closure
     }
 }
 
-public extension Style where T: Alterable {
+public extension Style where T: Decorable {
     
     @discardableResult
-    func apply(_ changes: Change<T>...) -> Style<T> {
-        changes.forEach { (change) in
-            change(object)
+    func apply(_ decorations: Decoration<T>...) -> Style<T> {
+        decorations.forEach { (decoration) in
+            decoration(object)
         }
         return self
     }
     
     @discardableResult
-    static func +(style: Style<T>, change: @escaping Change<T>) -> Style<T> {
-        style.apply(change)
+    static func +(style: Style<T>, decoration: @escaping Decoration<T>) -> Style<T> {
+        style.apply(decoration)
         return style
     }
     
     @discardableResult
-    func prepare(state: AnyHashable, change: @escaping Change<T>) -> Style<T> {
-        object.states[state] = change
+    func prepare(state: AnyHashable, decoration: @escaping Decoration<T>) -> Style<T> {
+        object.states[state] = decoration
         guard state == object.state else { return self }
         object.state = state
         return self
     }
     
     @discardableResult
-    func prepare(states: AnyHashable..., change: @escaping Change<T>) -> Style<T> {
+    func prepare(states: AnyHashable..., decoration: @escaping Decoration<T>) -> Style<T> {
         for state in states {
-            object.states[state] = change
+            object.states[state] = decoration
             guard state == object.state else { continue }
             object.state = state
         }
@@ -72,14 +72,14 @@ public extension Style where T: Alterable {
     }
 }
 
-public func +<T:Alterable>(lhs: @escaping Change<T>, rhs: @escaping Change<T>) -> Change<T> {
+public func +<T:Decorable>(lhs: @escaping Decoration<T>, rhs: @escaping Decoration<T>) -> Decoration<T> {
     return { (value: T) -> Void in
         lhs(value)
         rhs(value)
     }
 }
 
-public extension Alterable {
+public extension Decorable {
     
     var style: Style<Self> {
         get {
@@ -100,7 +100,7 @@ struct StyleFrameworkRuntimeKeys {
 var stateDictionary = [Int: Any]()
 var statesDictionary = [Int: Any]()
 
-extension Alterable {
+extension Decorable {
     
     var state: AnyHashable? {
         get {
@@ -111,16 +111,16 @@ extension Alterable {
             if let object = self as? NSObject {
                 stateDictionary[object.address] = value
             }
-            if let value = value, let change = states[value] {
-                style.apply(change)
+            if let value = value, let decoration = states[value] {
+                style.apply(decoration)
             }
         }
     }
     
-    var states: [AnyHashable: Change<Self>] {
+    var states: [AnyHashable: Decoration<Self>] {
         get {
             guard let object = self as? NSObject else { return [:] }
-            guard let dictionary = statesDictionary[object.address] as? [AnyHashable: Change<Self>] else { return [:] }
+            guard let dictionary = statesDictionary[object.address] as? [AnyHashable: Decoration<Self>] else { return [:] }
             return dictionary
         }
         set(value) {
