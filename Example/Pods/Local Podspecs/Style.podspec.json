@@ -1,6 +1,6 @@
 {
   "name": "Style",
-  "version": "0.2.5",
+  "version": "4.0.0",
   "summary": "Elegant UIView customizations in Swift",
   "homepage": "https://github.com/iwheelbuy/Style",
   "license": {
@@ -12,7 +12,7 @@
   },
   "source": {
     "git": "https://github.com/iwheelbuy/Style.git",
-    "tag": "0.2.5"
+    "tag": "4.0.0"
   },
   "platforms": {
     "ios": "9.0"

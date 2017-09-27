@@ -1,5 +1,5 @@
-# git tag 0.2.5
-# git push origin 0.2.5
+# git tag 4.0.0
+# git push origin 4.0.0
 # pod lib lint Style.podspec --no-clean
 # pod spec lint Style.podspec --allow-warnings
 # pod trunk push Style.podspec --allow-warnings
@@ -7,7 +7,7 @@
 Pod::Spec.new do |s|
 
 s.name                  = 'Style'
-s.version               = '0.2.5'
+s.version               = '4.0.0'
 s.summary               = 'Elegant UIView customizations in Swift'
 s.homepage              = 'https://github.com/iwheelbuy/Style'
 s.license               = { :type => 'MIT', :file => 'LICENSE' }
