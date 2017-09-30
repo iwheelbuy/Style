@@ -1,9 +1,5 @@
 PODS:
-  - RxCocoa (3.6.1):
-    - RxSwift (~> 3.6)
-  - RxSwift (3.6.1)
-  - Style (4.0.0):
-    - RxCocoa
+  - Style (4.1.0-beta.0)
 
 DEPENDENCIES:
   - Style (from `../`)
@@ -13,10 +9,8 @@ EXTERNAL SOURCES:
     :path: ../
 
 SPEC CHECKSUMS:
-  RxCocoa: 84a08739ab186248c7f31ce4ee92d6f8a947d690
-  RxSwift: f9de85ea20cd2f7716ee5409fc13523dc638e4e4
-  Style: 71c6741dae6316c16c9044385b8f0041ee80cf50
+  Style: 4f5586da818494523f7ed5284270063bb5d2edaf
 
-PODFILE CHECKSUM: 892da6912c864724c5a0825c555f8cdc45a63ee4
+PODFILE CHECKSUM: 04a83edc6bf8a7802425562019e1fb73be9dfd38
 
 COCOAPODS: 1.3.1

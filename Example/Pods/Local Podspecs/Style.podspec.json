@@ -1,6 +1,6 @@
 {
   "name": "Style",
-  "version": "4.0.0",
+  "version": "4.1.0-beta.0",
   "summary": "Elegant UIView customizations in Swift",
   "homepage": "https://github.com/iwheelbuy/Style",
   "license": {
@@ -12,15 +12,10 @@
   },
   "source": {
     "git": "https://github.com/iwheelbuy/Style.git",
-    "tag": "4.0.0"
+    "tag": "4.1.0-beta.0"
   },
   "platforms": {
     "ios": "9.0"
   },
-  "source_files": "Style/Classes/**/*",
-  "dependencies": {
-    "RxCocoa": [
-
-    ]
-  }
+  "source_files": "Style/Classes/**/*"
 }
