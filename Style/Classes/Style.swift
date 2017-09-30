@@ -14,12 +14,7 @@ public protocol Decorable: class {
     var style: Style<DecorableType> { get set }
 }
 
-extension NSObject: Decorable {
-    
-    var address: Int {
-        return unsafeBitCast(self, to: Int.self)
-    }
-}
+extension NSObject: Decorable {}
 
 public typealias Decoration<T> = (T) -> Void
 
@@ -48,28 +43,32 @@ public extension Style where T: Decorable {
     
     @discardableResult
     func prepare(state: AnyHashable, decoration: @escaping Decoration<T>) -> Style<T> {
-        object.states[state] = decoration
-        guard state == object.state else { return self }
-        object.state = state
+        let holder = object.holder
+        holder.states[state] = decoration
+        if state == holder.state {
+            object.style.apply(decoration)
+        }
         return self
     }
     
     @discardableResult
     func prepare(states: AnyHashable..., decoration: @escaping Decoration<T>) -> Style<T> {
+        let holder = object.holder
         for state in states {
-            object.states[state] = decoration
-            guard state == object.state else { continue }
-            object.state = state
+            holder.states[state] = decoration
+        }
+        if let state = holder.state, states.contains(state) {
+            object.style.apply(decoration)
         }
         return self
     }
     
     var state: AnyHashable? {
         get {
-            return object.state
+            return object.holder.state
         }
         set(value) {
-            object.state = value
+            object.holder.state = value
         }
     }
 }
@@ -93,74 +92,27 @@ public extension Decorable {
     }
 }
 
-var stateDictionary = [Int: Any]()
-var statesDictionary = [Int: Any]()
-let statesDisposeBag = DisposeBag()
-var statesMutex = pthread_mutex_t()
-let statesObserver = AnyObserver<Int>.init { (event: Event<Int>) in
-    guard let element = event.element else { return }
-    pthread_mutex_lock(&statesMutex)
-    stateDictionary[element] = nil
-    statesDictionary[element] = nil
-    pthread_mutex_unlock(&statesMutex)
+final class Holder<T:Decorable> {
+    
+    var state = Optional<AnyHashable>.none
+    var states = [AnyHashable: Decoration<T>]()
 }
 
-extension NSObject {
-    
-    func prepare() {
-        if stateDictionary[address] == nil && statesDictionary[address] == nil {
-            rx.deallocating
-                .observeOn(ConcurrentDispatchQueueScheduler(qos: .background))
-                .map({ [address] _ -> Int in
-                    return address
-                })
-                .observeOn(MainScheduler.instance)
-                .take(1)
-                .bind(to: statesObserver)
-                .disposed(by: statesDisposeBag)
-        }
-    }
-}
+private var STYLE_FRAMEWORK_HOLDER_ASSOCIATION_KEY: UInt8 = 0
 
 extension Decorable {
     
-    var state: AnyHashable? {
+    var holder: Holder<Self> {
         get {
-            guard let object = self as? NSObject else { return nil }
-            pthread_mutex_lock(&statesMutex)
-            defer {
-                pthread_mutex_unlock(&statesMutex)
-            }
-            return stateDictionary[object.address] as? AnyHashable
-        }
-        set(value) {
-            if let object = self as? NSObject {
-                pthread_mutex_lock(&statesMutex)
-                object.prepare()
-                stateDictionary[object.address] = value
-                pthread_mutex_unlock(&statesMutex)
-            }
-            if let value = value, let decoration = states[value] {
-                style.apply(decoration)
-            }
-        }
-    }
-    
-    var states: [AnyHashable: Decoration<Self>] {
-        get {
-            guard let object = self as? NSObject else { return [:] }
-            pthread_mutex_lock(&statesMutex)
-            defer {
-                pthread_mutex_unlock(&statesMutex)
-            }
-            return statesDictionary[object.address] as? [AnyHashable: Decoration<Self>] ?? [:]
-        }
-        set(value) {
-            if let object = self as? NSObject {
-                pthread_mutex_lock(&statesMutex)
-                object.prepare()
-                statesDictionary[object.address] = value
-                pthread_mutex_unlock(&statesMutex)
+            if let holder = objc_getAssociatedObject(self, &STYLE_FRAMEWORK_HOLDER_ASSOCIATION_KEY) as? Holder<Self> {
+                print("get")
+                return holder
+            } else {
+                print("set")
+                let holder = Holder<Self>()
+                let policy = objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC
+                objc_setAssociatedObject(self, &STYLE_FRAMEWORK_HOLDER_ASSOCIATION_KEY, holder, policy)
+                return holder
             }
         }
     }
