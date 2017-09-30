@@ -71,7 +71,11 @@ public extension Style where T: Decorable {
             return object.holder.state
         }
         set(value) {
-            object.holder.state = value
+            let holder = object.holder
+            if let key = value, let decoration = holder.states[key] {
+                object.style.apply(decoration)
+            }
+            holder.state = value
         }
     }
 }

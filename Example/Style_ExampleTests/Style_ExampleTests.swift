@@ -10,16 +10,13 @@ class Style_ExampleTests: XCTestCase {
     func testPerformanceExample() {
         let view = UIView()
         self.measure {
-            for _ in 0 ... 10000 {
-                view.style.state = 1
-            }
-            for _ in 0 ... 10000 {
-                _ = view.style.state
-            }
-            for x in 0 ... 10000 {
+            for x in 0 ... 100000 {
                 view.style.prepare(state: x, decoration: { (view) in
                     //
                 })
+            }
+            for x in 0 ... 100000 {
+                view.style.state = x
             }
         }
     }
