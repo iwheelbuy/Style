@@ -11,11 +11,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         defer {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 let view1 = UIView()
-                view1.style.prepare(state: 17, decoration: UIView.decoration(closure: { (view) in
+                view1.decorator.prepare(state: 17, decoration: UIView.decoration(closure: { (view) in
                     //
                 }))
                 let view2 = UIView()
-                view2.style.prepare(state: 12, decoration: UIView.decoration(closure: { (view) in
+                view2.decorator.prepare(state: 12, decoration: UIView.decoration(closure: { (view) in
                     //
                 }))
             }

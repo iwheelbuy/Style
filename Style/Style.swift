@@ -2,7 +2,7 @@ import Foundation
 
 public typealias Decoration<T> = (T) -> Void
 
-public struct Style<T> {
+public struct Decorator<T> {
     
     let object: T
 }
@@ -11,7 +11,7 @@ public protocol Decorable: class {
     
     associatedtype DecorableType
     
-    var style: Style<DecorableType> { get set }
+    var decorator: Decorator<DecorableType> { get set }
 }
 
 public extension Decorable {
@@ -20,18 +20,18 @@ public extension Decorable {
         return closure
     }
     
-    var style: Style<Self> {
-        get { return Style(object: self) }
+    var decorator: Decorator<Self> {
+        get { return Decorator(object: self) }
         set {}
     }
 }
 
 extension NSObject: Decorable {}
 
-public extension Style where T: Decorable {
+public extension Decorator where T: Decorable {
     
     @discardableResult
-    func apply(_ decorations: Decoration<T>...) -> Style<T> {
+    func apply(_ decorations: Decoration<T>...) -> Decorator<T> {
         decorations.forEach { (decoration) in
             decoration(object)
         }
@@ -39,29 +39,29 @@ public extension Style where T: Decorable {
     }
     
     @discardableResult
-    static func +(style: Style<T>, decoration: @escaping Decoration<T>) -> Style<T> {
-        style.apply(decoration)
-        return style
+    static func +(decorator: Decorator<T>, decoration: @escaping Decoration<T>) -> Decorator<T> {
+        decorator.apply(decoration)
+        return decorator
     }
     
     @discardableResult
-    func prepare(state: AnyHashable, decoration: @escaping Decoration<T>) -> Style<T> {
+    func prepare(state: AnyHashable, decoration: @escaping Decoration<T>) -> Decorator<T> {
         let holder = object.holder
         holder.states[state] = decoration
         if state == holder.state {
-            object.style.apply(decoration)
+            object.decorator.apply(decoration)
         }
         return self
     }
     
     @discardableResult
-    func prepare(states: AnyHashable..., decoration: @escaping Decoration<T>) -> Style<T> {
+    func prepare(states: AnyHashable..., decoration: @escaping Decoration<T>) -> Decorator<T> {
         let holder = object.holder
         for state in states {
             holder.states[state] = decoration
         }
         if let state = holder.state, states.contains(state) {
-            object.style.apply(decoration)
+            object.decorator.apply(decoration)
         }
         return self
     }
@@ -73,7 +73,7 @@ public extension Style where T: Decorable {
         set(value) {
             let holder = object.holder
             if let key = value, let decoration = holder.states[key] {
-                object.style.apply(decoration)
+                object.decorator.apply(decoration)
             }
             holder.state = value
         }
